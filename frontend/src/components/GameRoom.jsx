@@ -1,15 +1,28 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import GameGrid from './GameGrid';
+import { socketContext } from '../App';
+
 
 const GameRoom = () => {
-
+  const name = localStorage.getItem("playerName")
+  const roomId = localStorage.getItem("roomId")
+  const {connectSocket} = useContext(socketContext)
+  
   const renderFrom = [[1,2,3], [4,5,6], [7,8,9]];
 
   const[gameState, setGameState] = useState(renderFrom)
   const[currentPlayer, setCurrentPlayer] = useState('circle')
   const[finishedState, setFinishedState] = useState(null)
   const [finishedStateArray, setFinishedStateArray] = useState([])
+  const [opponentName, setOppnentName] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (connectSocket && !opponentName) {
+      setLoading(true);
+    }
+  }, [connectSocket, opponentName]);
   
   const gameWinner = () => {
     for(let row = 0; row < gameState.length; row++) {
@@ -52,18 +65,23 @@ const GameRoom = () => {
     if(winner) setFinishedState(winner)
   },[gameState])
 
-
+ console.log(loading)
 
   return (
     
-
-   
-    <div className='text-white  flex flex-col mt-12 gap-y-8'>
+    <>
+    {loading ? 
+    <div className='flex flex-col justify-center items-center h-[89vh] w-[89vw]'>
+    <p className='loader'></p>
+    <h1 className='text-slate-300 font-semibold text-xl mt-2'> Waiting for oponant...</h1>
+    </div>
+     : 
+      <div className='text-white  flex flex-col mt-12 gap-y-8'>
       <div className='flex flex-row justify-evenly '>
         <div className='bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold'
         > 
         
-        MySelf</div>
+        {name}</div>
         <div className='bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold'> Opponent </div>
       </div>
       <div className='text-3xl font-semibold mx-auto text-white bg-violet-200 bg-opacity-40
@@ -96,6 +114,11 @@ const GameRoom = () => {
         {finishedState && finishedState === 'draw' &&
           <h1 className='uppercase px-2 py-2 font-bold text-xl mx-auto text-fuchsia-700 '> It's a draw, Play again! </h1>}
     </div>
+    }
+ 
+    </>
+   
+  
     
     
    
