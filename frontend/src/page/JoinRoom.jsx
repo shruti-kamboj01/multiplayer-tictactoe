@@ -19,10 +19,10 @@ const JoinRoom = () => {
     setFormData( (prev) => ({...prev, [name]: value}))
   };
   
-  socket?.emit("request_to_play", {
-    playerName: formData.name,
-    roomId: formData.id
-  })
+  // socket?.emit("request_to_play", {
+  //   playerName: formData.name,
+  //   roomId: formData.id
+  // })
     
 
   const handleJoinRoom = (e) => {

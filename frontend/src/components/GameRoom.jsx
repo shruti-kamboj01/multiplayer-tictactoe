@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+
 import GameGrid from './GameGrid';
 import { socketContext } from '../App';
 
@@ -7,7 +7,7 @@ import { socketContext } from '../App';
 const GameRoom = () => {
   const name = localStorage.getItem("playerName")
   const roomId = localStorage.getItem("roomId")
-  const {connectSocket} = useContext(socketContext)
+  const {connectSocket, socket} = useContext(socketContext)
   
   const renderFrom = [[1,2,3], [4,5,6], [7,8,9]];
 
@@ -15,14 +15,33 @@ const GameRoom = () => {
   const[currentPlayer, setCurrentPlayer] = useState('circle')
   const[finishedState, setFinishedState] = useState(null)
   const [finishedStateArray, setFinishedStateArray] = useState([])
-  const [opponentName, setOppnentName] = useState(null)
+  const [opponentName, setOpponentName] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [playerName, setPlayerName] = useState(null)
+
+  
 
   useEffect(() => {
     if (connectSocket && !opponentName) {
       setLoading(true);
     }
+    setPlayerName(name)
   }, [connectSocket, opponentName]);
+
+  socket?.emit("request_to_play", {
+    playerName: name,
+    roomId: roomId
+  })
+
+  socket?.on("OpponentNotFound", function() {
+    setOpponentName(false)
+  })
+
+  socket?.on("OpponentFound", function(data) {
+    setOpponentName(data.opponentName)
+    setLoading(false)
+  })
+  
   
   const gameWinner = () => {
     for(let row = 0; row < gameState.length; row++) {
@@ -61,11 +80,11 @@ const GameRoom = () => {
 
   useEffect(() => {
     const winner = gameWinner()
-    console.log(winner)
+    // console.log(winner)
     if(winner) setFinishedState(winner)
   },[gameState])
 
- console.log(loading)
+//  console.log(loading)
 
   return (
     
@@ -81,8 +100,8 @@ const GameRoom = () => {
         <div className='bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold'
         > 
         
-        {name}</div>
-        <div className='bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold'> Opponent </div>
+        {playerName}</div>
+        <div className='bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold'>{opponentName} </div>
       </div>
       <div className='text-3xl font-semibold mx-auto text-white bg-violet-200 bg-opacity-40
       p-1 px-3 rounded-md w-[33%] text-center'>
@@ -104,7 +123,7 @@ const GameRoom = () => {
       </div>
 
       <div className='text-xl mx-auto font-semibold text-blue-100'>
-        <p>You are playing against {finishedState}</p>
+        <p>You are playing against </p>
 
         
       </div>

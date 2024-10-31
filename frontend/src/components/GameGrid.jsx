@@ -65,7 +65,7 @@ const GameGird = ({setGameState, key, id, currentPlayer, setCurrentPlayer,finish
         }
 
   }
-  console.log(finishedStateArray)
+  // console.log(finishedStateArray)
   return (
     <div className={`bg-violet-300 w-24 h-24 bg-opacity-35 rounded-md ${finishedStateArray.includes(id) ? "bg-pink-600" : ""}`}
     onClick={clickOnSquare}>
