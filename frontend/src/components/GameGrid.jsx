@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const GameGird = ({setGameState, key, id, currentPlayer, setCurrentPlayer,finishedState,finishedStateArray}) => {
+const GameGird = ({socket, currentEle , setGameState, key, id, currentPlayer, setCurrentPlayer,finishedState,finishedStateArray}) => {
  
   const circleSvg = (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -53,6 +53,12 @@ const GameGird = ({setGameState, key, id, currentPlayer, setCurrentPlayer,finish
             setIcon(crossSvg)
            }
            const myCurrentPlayer = currentPlayer;
+           socket.emit("PlayerMoveFromClient", {
+            state:{
+              id,
+              sign: myCurrentPlayer
+            }
+           })
            setCurrentPlayer(currentPlayer === 'circle' ? 'cross' : 'circle')
            setGameState((prevState => {
             let newState = [...prevState]
@@ -69,7 +75,7 @@ const GameGird = ({setGameState, key, id, currentPlayer, setCurrentPlayer,finish
   return (
     <div className={`bg-violet-300 w-24 h-24 bg-opacity-35 rounded-md ${finishedStateArray.includes(id) ? "bg-pink-600" : ""}`}
     onClick={clickOnSquare}>
-         {icon}
+         {currentEle === 'circle' ? circleSvg : currentEle === 'cross' ? crossSvg : icon}
     </div>
   )
 }

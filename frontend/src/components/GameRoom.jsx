@@ -41,6 +41,20 @@ const GameRoom = () => {
     setOpponentName(data.opponentName)
     setLoading(false)
   })
+
+ 
+
+  socket?.on("PlayerMoveFromServer",(data) =>{
+    const id = data.state.id
+    setGameState((prevState) => {
+      let newState = [...prevState]
+      const row = Math.floor(id/3)
+      const col = id%3
+      newState[row][col] = data.state.sign
+      return newState
+    })
+    setCurrentPlayer(data.state.sign === 'circle' ? 'cross' : 'cicle')
+  })
   
   
   const gameWinner = () => {
@@ -82,6 +96,7 @@ const GameRoom = () => {
     const winner = gameWinner()
     // console.log(winner)
     if(winner) setFinishedState(winner)
+  
   },[gameState])
 
 //  console.log(loading)
@@ -112,7 +127,7 @@ const GameRoom = () => {
       {gameState.map((arr, rowIndex) => 
         arr.map((ele, colIndex) => {
           return (
-             <GameGrid id={rowIndex * 3 + colIndex} key={rowIndex * 3 + colIndex} setGameState={setGameState}
+             <GameGrid socket={socket} currentEle = {ele} id={rowIndex * 3 + colIndex} key={rowIndex * 3 + colIndex} setGameState={setGameState}
                       currentPlayer={currentPlayer} setCurrentPlayer={setCurrentPlayer}
                        finishedState={finishedState} finishedStateArray={finishedStateArray}
              />
@@ -123,7 +138,7 @@ const GameRoom = () => {
       </div>
 
       <div className='text-xl mx-auto font-semibold text-blue-100'>
-        <p>You are playing against </p>
+        <p>You are playing against {opponentName} </p>
 
         
       </div>

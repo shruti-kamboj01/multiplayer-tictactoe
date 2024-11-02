@@ -43,14 +43,34 @@ socketIO.on("connection", (socket) => {
             opponentPlayer.socket.emit("OpponentFound", {
                 opponentName: currentUser.playerName,
             })
+        
+
+            opponentPlayer.socket.on("PlayerMoveFromClient", (data) => {
+                console.log(data)
+                currentUser.socket.emit("PlayerMoveFromServer", {
+                    
+                    ...data,
+                })
+            })
+            currentUser.socket.on("PlayerMoveFromClient", (data) => {
+                opponentPlayer.socket.emit("PlayerMoveFromServer", {
+                    ...data,
+                })
+            })
         }
         else {
             currentUser.socket.emit("OpponentNotFound")
         }
+
+       
     })
-    // socket.on('disconnect', () => {
-    //   console.log('🔥: A user disconnected');
-    // });
+    socket.on('disconnect', () => {
+       const currentUser = allUsers[socket.id]
+       currentUser.online = false
+       currentUser.playing = false
+
+       
+    });
 });
 
 server.listen(9000, () => console.log('Server started'))
