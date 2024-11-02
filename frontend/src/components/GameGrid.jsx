@@ -65,7 +65,7 @@ const GameGird = ({socket, currentEle , setGameState, key, id, currentPlayer, se
             let rowIndex = Math.floor(id/3)
             let colIndex = id%3
             newState[rowIndex][colIndex] = myCurrentPlayer
-            // console.log(newState)
+            
             return newState
            }))
         }
