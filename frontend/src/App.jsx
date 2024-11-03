@@ -12,7 +12,7 @@ function App() {
   const [socket, setSocket] = useState(null);
   const connectSocket = () => {
     if (!socket) {
-      const newSocket = socketIO.connect("http://localhost:9000");
+      const newSocket = socketIO.connect("https://multiplayer-tictactoe-ails.onrender.com");
       setSocket(newSocket);
     }
   };
