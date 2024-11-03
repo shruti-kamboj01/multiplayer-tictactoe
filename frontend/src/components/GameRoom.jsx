@@ -21,40 +21,7 @@ const GameRoom = () => {
   const [opponentName, setOpponentName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [playerName, setPlayerName] = useState(null);
-
-  useEffect(() => {
-    if (connectSocket && !opponentName) {
-      setLoading(true);
-    }
-    setPlayerName(name);
-  }, [connectSocket, opponentName]);
-
-  socket?.emit("request_to_play", {
-    playerName: name,
-    roomId: roomId,
-  });
-
-  socket?.on("OpponentNotFound", function () {
-    setOpponentName(false);
-  });
-
-  socket?.on("OpponentFound", function (data) {
-    setOpponentName(data.opponentName);
-    setLoading(false);
-  });
-
-  socket?.on("PlayerMoveFromServer", (data) => {
-    const id = data.state.id;
-    setGameState((prevState) => {
-      let newState = [...prevState];
-      let rowIndex = Math.floor(id / 3);
-      let colIndex = id % 3;
-      newState[rowIndex][colIndex] = data.state.sign;
-
-      return newState;
-    });
-    setCurrentPlayer(data.state.sign === "circle" ? "cross" : "cicle");
-  });
+  const [playingAs, setPlayingAs] = useState(null);
 
   const gameWinner = () => {
     for (let row = 0; row < gameState.length; row++) {
@@ -82,7 +49,7 @@ const GameRoom = () => {
       gameState[0][0] === gameState[1][1] &&
       gameState[1][1] === gameState[2][2]
     ) {
-      setFinishedStateArray([0, 4, 7]);
+      setFinishedStateArray([0, 4, 8]);
       return gameState[0][0];
     }
     if (
@@ -106,8 +73,41 @@ const GameRoom = () => {
     if (winner) setFinishedState(winner);
   }, [gameState]);
 
-  //  console.log(loading)
+  useEffect(() => {
+    if (connectSocket && !opponentName) {
+      setLoading(true);
+    }
+    setPlayerName(name);
+  }, [connectSocket, opponentName]);
 
+  socket?.on("OpponentNotFound", function () {
+    setOpponentName(false);
+  });
+
+  socket?.on("opponentLeftMatch", () => {
+    setFinishedState(null);
+  });
+
+  socket?.on("OpponentFound", function (data) {
+    setLoading(false);
+    setOpponentName(data.opponentName);
+    setPlayingAs(data.playingAs);
+  });
+
+  socket?.on("PlayerMoveFromServer", (data) => {
+    const id = data.state.id;
+    // console.log(id);
+    setGameState((prevState) => {
+      let newState = [...prevState];
+      let rowIndex = Math.floor(id / 3);
+      let colIndex = id % 3;
+      newState[rowIndex][colIndex] = data.state.sign;
+
+      return newState;
+    });
+    setCurrentPlayer(data.state.sign === "circle" ? "cross" : "circle");
+  });
+  console.log("currentPlayer", currentPlayer, "playingAs", playingAs);
   return (
     <>
       {loading ? (
@@ -121,11 +121,25 @@ const GameRoom = () => {
       ) : (
         <div className="text-white  flex flex-col mt-12 gap-y-8">
           <div className="flex flex-row justify-evenly ">
-            <div className="bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold">
-              {playerName}
-            </div>
-            <div className="bg-violet-200 bg-opacity-40 p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold">
+            <div
+              className={` ${
+                currentPlayer === playingAs
+                  ? "bg-pink-800"
+                  : "bg-pink-300 bg-opacity-40"
+              }
+             p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold`}
+            >
               {opponentName}{" "}
+            </div>
+            <div
+              className={`${
+                currentPlayer === playingAs
+                  ? "bg-pink-300 bg-opacity-40"
+                  : "bg-pink-800"
+              }
+                p-1 px-7 rounded-tr-3xl rounded-bl-3xl text-xl font-semibold`}
+            >
+              {playerName}
             </div>
           </div>
           <div
@@ -145,6 +159,7 @@ const GameRoom = () => {
                   <GameGrid
                     socket={socket}
                     currentEle={ele}
+                    playingAs={playingAs}
                     id={rowIndex * 3 + colIndex}
                     key={rowIndex * 3 + colIndex}
                     setGameState={setGameState}
@@ -158,18 +173,21 @@ const GameRoom = () => {
             )}
           </div>
 
-          <div className="text-xl mx-auto font-semibold text-blue-100">
-            <p>You are playing against {opponentName} </p>
-          </div>
+          {!finishedState && (
+            <div className="text-xl mx-auto font-semibold text-blue-100">
+              <p>You are playing against {opponentName} </p>
+            </div>
+          )}
           {finishedState && finishedState !== "draw" && (
-            <h1 className="uppercase px-2 py-2 font-bold text-xl mx-auto text-fuchsia-700 ">
+            <h1 className="uppercase px-2 py-2 font-bold text-xl mx-auto text-pink-800 ">
               {" "}
-              {finishedState} won the game!{" "}
+              {finishedState == playingAs ? "You" : ` ${opponentName}`} won the
+              game!{" "}
             </h1>
           )}
 
           {finishedState && finishedState === "draw" && (
-            <h1 className="uppercase px-2 py-2 font-bold text-xl mx-auto text-fuchsia-700 ">
+            <h1 className="uppercase px-2 py-2 font-bold text-xl mx-auto text-pink-800 ">
               {" "}
               It's a draw, Play again!{" "}
             </h1>

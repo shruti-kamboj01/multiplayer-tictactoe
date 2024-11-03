@@ -1,7 +1,16 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
-const GameGird = ({socket, currentEle , setGameState, key, id, currentPlayer, setCurrentPlayer,finishedState,finishedStateArray}) => {
- 
+const GameGird = ({
+  socket,
+  currentEle,
+  setGameState,
+  playingAs,
+  id,
+  currentPlayer,
+  setCurrentPlayer,
+  finishedState,
+  finishedStateArray,
+}) => {
   const circleSvg = (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -22,7 +31,7 @@ const GameGird = ({socket, currentEle , setGameState, key, id, currentPlayer, se
       </g>
     </svg>
   );
-  
+
   const crossSvg = (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -43,41 +52,53 @@ const GameGird = ({socket, currentEle , setGameState, key, id, currentPlayer, se
       </g>
     </svg>
   );
-  const [icon, setIcon] = useState(null)
-  const  clickOnSquare= () => {
-    if(finishedState != null) return;
-       if(!icon ) {
-           if(currentPlayer === 'circle') {
-            setIcon(circleSvg)
-           }else {
-            setIcon(crossSvg)
-           }
-           const myCurrentPlayer = currentPlayer;
-           socket.emit("PlayerMoveFromClient", {
-            state:{
-              id,
-              sign: myCurrentPlayer
-            }
-           })
-           setCurrentPlayer(currentPlayer === 'circle' ? 'cross' : 'circle')
-           setGameState((prevState => {
-            let newState = [...prevState]
-            let rowIndex = Math.floor(id/3)
-            let colIndex = id%3
-            newState[rowIndex][colIndex] = myCurrentPlayer
-            
-            return newState
-           }))
-        }
+  const [icon, setIcon] = useState(null);
+  const clickOnSquare = () => {
+    if (playingAs != currentPlayer) return;
+    if (finishedState) return;
+    if (!icon) {
+      console.log("current player is", currentPlayer);
+      console.log("playingAs", playingAs);
+      if (currentPlayer === "circle") {
+        setIcon(circleSvg);
+      } else {
+        setIcon(crossSvg);
+      }
 
-  }
-  // console.log(finishedStateArray)
+      const myCurrentPlayer = currentPlayer;
+      socket?.emit("PlayerMoveFromClient", {
+        state: {
+          id,
+          sign: myCurrentPlayer,
+        },
+      });
+      setCurrentPlayer(currentPlayer === "circle" ? "cross" : "circle");
+      setGameState((prevState) => {
+        let newState = [...prevState];
+        let rowIndex = Math.floor(id / 3);
+        let colIndex = id % 3;
+        newState[rowIndex][colIndex] = myCurrentPlayer;
+
+        return newState;
+      });
+    }
+  };
+  //console.log(finishedStateArray, " ", id);
   return (
-    <div className={`bg-violet-300 w-24 h-24 bg-opacity-35 rounded-md ${finishedStateArray.includes(id) ? "bg-pink-600" : ""}`}
-    onClick={clickOnSquare}>
-         {currentEle === 'circle' ? circleSvg : currentEle === 'cross' ? crossSvg : icon}
+    <div
+      className={`bg-violet-300 w-24 h-24 bg-opacity-35 rounded-md ${
+        finishedStateArray.includes(id) ? "bg-pink-700" : ""
+      } ${currentPlayer !== playingAs ? "not-allowed cursor-not-allowed" : ""}
+        ${finishedState && finishedState !== playingAs ? "bg-gray-500" : ""}`}
+      onClick={clickOnSquare}
+    >
+      {currentEle === "circle"
+        ? circleSvg
+        : currentEle === "cross"
+        ? crossSvg
+        : icon}
     </div>
-  )
-}
+  );
+};
 
-export default GameGird
+export default GameGird;

@@ -12,18 +12,18 @@ const socketIO = new Server(server, {
 });
 
 const allUsers = {};
+const allRooms = [];
 
 socketIO.on("connection", (socket) => {
-  console.log(`⚡: ${socket.id} user just connected!`);
+  //console.log(`⚡: ${socket.id} user just connected!`);
   allUsers[socket.id] = {
     socket: socket,
     online: true,
   };
   socket.on("request_to_play", (data) => {
-    // console.log(data)
+    // console.log("req to play data",data)
     const currentUser = allUsers[socket.id];
     currentUser.playerName = data.playerName;
-    currentUser.roomId = data.roomId;
 
     let opponentPlayer;
 
@@ -35,15 +35,28 @@ socketIO.on("connection", (socket) => {
       }
     }
     if (opponentPlayer) {
+      // Both players are now in a room
+      allRooms.push({
+        player1: opponentPlayer,
+        player2: currentUser,
+      });
+
+      // Notify both players of their opponent and role
       currentUser.socket.emit("OpponentFound", {
         opponentName: opponentPlayer.playerName,
+        playingAs: "circle",
       });
       opponentPlayer.socket.emit("OpponentFound", {
         opponentName: currentUser.playerName,
+        playingAs: "cross",
       });
+      // Set players as 'playing' to avoid rematching them
+      if (currentUser && opponentPlayer) {
+        currentUser.playing = true;
+        opponentPlayer.playing = true;
+      }
 
       opponentPlayer.socket.on("PlayerMoveFromClient", (data) => {
-        console.log(data);
         currentUser.socket.emit("PlayerMoveFromServer", {
           ...data,
         });
@@ -57,10 +70,26 @@ socketIO.on("connection", (socket) => {
       currentUser.socket.emit("OpponentNotFound");
     }
   });
-  socket.on("disconnect", () => {
+
+  socket.on("disconnect", function () {
     const currentUser = allUsers[socket.id];
     currentUser.online = false;
     currentUser.playing = false;
+
+    for (let index = 0; index < allRooms.length; index++) {
+      const { player1, player2 } = allRooms[index];
+      if (player1.socket.id === socket.id) {
+       // console.log(socket.id, "left the match");
+        player2.socket.emit("opponentLeftMatch");
+        break;
+      }
+
+      if (player2.socket.id === socket.id) {
+       // console.log(socket.id, "left the match");
+        player1.socket.emit("opponentLeftMatch");
+        break;
+      }
+    }
   });
 });
 
