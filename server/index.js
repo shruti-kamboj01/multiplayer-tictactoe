@@ -8,7 +8,7 @@ const cors = require("cors");
 
 app.use(cors());
 const socketIO = new Server(server, {
-  cors: "http://localhost:5173",
+  cors:["http://localhost:3000","https://multiplayer-tictactoe-qo2g.vercel.app/"],
 });
 
 const allUsers = {};
